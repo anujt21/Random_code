@@ -1,0 +1,22 @@
+image: connorfuhrman/uarizona-ece275-tester:homework3
+
+
+grade-job:
+  stage: test
+  script:
+    - mv /tester . 2>/dev/null || true
+    - source /env_setup.sh
+    - mkdir build && cd build
+    - cmake .. -DTESTING_ONLY=1 && make -j1 || (cd .. && printf "\nERROR! Compilation failed. Score is 0\n" && printf "[total]\nscore = 0" > results.ini && false)
+    - ctest --output-on-failure
+  after_script:
+    - python3 tester/compile_score.py results.ini
+    - mkdir test_artifacts
+    - cp results.ini test_artifacts
+    - cp /sol_files/*.html test_artifacts 2>/dev/null || true
+    - zip -rq test_artifacts.zip test_artifacts
+  artifacts:
+    paths:
+      - test_artifacts.zip
+    when: always
+    expire_in: never
